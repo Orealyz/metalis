@@ -2,15 +2,9 @@
 
 ## Plan d'adressage
 
-> Environnement lab : réseau plat `10.33.81.0/24`. Le découpage VLAN ci-dessous est l'architecture cible pour un déploiement en production.
-
-| VLAN | Nom | Réseau cible | Usage |
-|---|---|---|---|
-| 10 | Bureaux | 192.168.10.0/24 | Postes administratifs, commerciaux |
-| 20 | Atelier | 192.168.20.0/24 | CNC, douchettes, tablettes |
-| 30 | Serveurs | 192.168.30.0/24 | VMs Proxmox (DC, NAS, ERP) |
-| 40 | DMZ | 192.168.40.0/24 | vm-web (exposition publique) |
-| 99 | Management | 192.168.99.0/24 | Interface Proxmox (accès restreint) |
+| Réseau | Masque | Usage |
+|---|---|---|
+| 10.33.81.0/24 | /24 | Réseau lab — toutes les VMs et le CT Proxmox |
 
 ## Hôtes fixes
 
