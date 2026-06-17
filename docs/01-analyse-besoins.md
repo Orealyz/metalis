@@ -51,13 +51,28 @@ La virtualisation répond directement aux problèmes de METALIS :
 - **Évolutivité** : ajouter de la RAM ou du CPU à une VM ne nécessite pas de changer de matériel physique
 - **Accès distants** : les VMs peuvent exposer des services VPN sans modifier le réseau physique existant
 
+## Inventaire des VMs
+
+| ID | Nom | IP | État / rôle |
+|---|---|---|---|
+| 100 | `ct-vpn` | 10.33.81.208 | Wireguard configuré |
+| 101 | `vm-client` | 10.33.81.211 | Accès partage SMB + présent sur le domaine (co à un compte user) |
+| 102 | `vm-dc` | 10.33.81.222 | AD configuré, utilisateurs créés |
+| 103 | `vm-supervision` | 10.33.81.224 | Prometheus, Grafana et Loki — alertes Telegram |
+| 104 | `vm-erp` | 10.33.81.221 | Odoo en place |
+| 105 | `vm-nas` | 10.33.81.219 | SMB configuré, conforme aux accès AD |
+| 106 | `vm-clone` | — | Config de base en place — VM prête à cloner |
+| 107 | `vm-web` | 10.33.81.223 | WordPress et WooCommerce configurés |
+
 ## Logiciels et usages retenus
 
-| Domaine | Outil | VM associée |
-|---|---|---|
-| Identité / partages | Active Directory + Samba | `vm-dc` |
-| Fichiers CAO | Samba sur Debian | `vm-nas` |
-| ERP | Odoo 17 | `vm-erp` |
-| E-commerce + vitrine | WooCommerce + WordPress | `vm-web` |
-| Messagerie | Microsoft 365 (cloud, inchangé) | — |
-| Atelier (CNC, étiquettes) | Accès réseau via VLAN dédié | VLAN 20 |
+| Domaine | Outil | VM associée | IP |
+|---|---|---|---|
+| Identité / partages | Active Directory + Samba | `vm-dc` (102) | 10.33.81.222 |
+| Fichiers CAO | Samba sur Debian | `vm-nas` (105) | 10.33.81.219 |
+| ERP | Odoo 17 | `vm-erp` (104) | 10.33.81.221 |
+| E-commerce + vitrine | WooCommerce + WordPress | `vm-web` (107) | 10.33.81.223 |
+| Accès distant | WireGuard | `ct-vpn` (100) | 10.33.81.208 |
+| Supervision | Prometheus + Grafana + Loki | `vm-supervision` (103) | 10.33.81.224 |
+| Messagerie | Microsoft 365 (cloud, inchangé) | — | — |
+| Atelier (CNC, étiquettes) | Accès réseau via VLAN dédié | VLAN 20 | — |
