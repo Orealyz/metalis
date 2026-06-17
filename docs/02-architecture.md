@@ -25,15 +25,18 @@ Proxmox VE est installé directement sur le matériel (mini-PC dédié ou VPS), 
 
 ## Architecture logique
 
-### Machines virtuelles
+### Machines virtuelles et conteneurs
 
 ```
 Proxmox VE (hôte physique)
-├── vm-dc        — Windows Server 2022  — Active Directory + DNS
-├── vm-nas       — Debian 12            — Fichiers CAO (Samba) + sauvegardes
-├── vm-erp       — Debian 12            — Odoo 17 + PostgreSQL
-├── vm-web       — Debian 12            — WordPress + WooCommerce (Nginx)
-└── vm-client    — Windows 10           — Poste client de test
+├── [CT] ct-vpn        — Debian 12            — WireGuard VPN
+├── [VM] vm-dc         — Windows Server 2022  — Active Directory + DNS
+├── [VM] vm-nas        — Debian 12            — Fichiers CAO (Samba)
+├── [VM] vm-erp        — Debian 12            — Odoo 17 + PostgreSQL
+├── [VM] vm-web        — Debian 12            — WordPress + WooCommerce (Nginx)
+├── [VM] vm-supervision — Debian 12           — Prometheus + Grafana + Loki
+├── [VM] vm-client     — Windows 10           — Poste client de test
+└── [VM] vm-clone      — Debian 12            — Template de base (prêt à cloner)
 ```
 
 ### Rôles et justifications
@@ -67,20 +70,18 @@ Permet de valider les accès réseau, les droits Samba et le comportement utilis
 
 ### Adressage IP
 
-| Réseau | Plage | Passerelle |
-|---|---|---|
-| VLAN 10 Bureaux | 192.168.10.0/24 | 192.168.10.1 |
-| VLAN 20 Atelier | 192.168.20.0/24 | 192.168.20.1 |
-| VLAN 30 Serveurs | 192.168.30.0/24 | 192.168.30.1 |
-| VLAN 40 DMZ | 192.168.40.0/24 | 192.168.40.1 |
+> Les VMs sont déployées sur un réseau plat `10.33.81.0/24` (environnement lab). Le découpage VLAN reste l'architecture cible pour un déploiement en production.
 
-| VM | IP fixe | VLAN |
+| VM / CT | ID Proxmox | IP fixe |
 |---|---|---|
-| vm-dc | 192.168.30.10 | 30 |
-| vm-nas | 192.168.30.20 | 30 |
-| vm-erp | 192.168.30.30 | 30 |
-| vm-web | 192.168.40.10 | 40 |
-| vm-client | 192.168.10.50 | 10 |
+| `ct-vpn` (CT) | 100 | 10.33.81.208 |
+| `vm-client` | 101 | 10.33.81.211 |
+| `vm-dc` | 102 | 10.33.81.222 |
+| `vm-supervision` | 103 | 10.33.81.224 |
+| `vm-erp` | 104 | 10.33.81.221 |
+| `vm-nas` | 105 | 10.33.81.219 |
+| `vm-clone` | 106 | — |
+| `vm-web` | 107 | 10.33.81.223 |
 
 ### Accès distant
 
