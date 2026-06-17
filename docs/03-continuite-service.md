@@ -1,130 +1,121 @@
 # 03 — Continuité de service — METALIS
 
-## Contexte
+La direction a posé la question clé : *"Que se passe-t-il si tout s'arrête un vendredi après-midi ?"*
 
-La direction de METALIS a posé la question clé : *"Que se passe-t-il si tout s'arrête un vendredi après-midi ?"*
+Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 
-La virtualisation ne suffit pas à elle seule à répondre : il faut une stratégie de sauvegarde, des procédures claires et des tests de restauration.
+---
+
+## RTO / RPO par service
+
+| Service | VM | RTO cible | RPO cible |
+|---|---|---|---|
+| Fichiers CAO | vm-nas | **30 min** | 24h |
+| Active Directory | vm-dc | 1h | 7 jours |
+| ERP Odoo | vm-erp | 2h | 24h |
+| Site e-commerce | vm-web | 4h | 7 jours |
+| VPN | ct-vpn | 4h | N/A |
+
+> vm-nas est le service **le plus critique** : le client a déjà subi une panne NAS avec perte de données. Son indisponibilité bloque toute la production.
+
+---
 
 ## Stratégie de sauvegarde
 
-### Règle 3-2-1 adaptée au contexte
+### Règle 3-2-1
 
 | Règle | Application chez METALIS |
 |---|---|
-| **3** copies des données | Données live sur Proxmox + snapshot Proxmox + copie externe |
-| **2** supports différents | SSD interne Proxmox + disque externe ou NAS dédié sauvegarde |
-| **1** copie hors site | Copie mensuelle sur un stockage cloud (ex. Backblaze B2) |
-
-> La copie cloud est optionnelle à court terme compte tenu du budget, mais fortement recommandée pour les fichiers CAO critiques.
+| **3** copies | Données live + snapshot Proxmox + copie externe |
+| **2** supports | SSD interne Proxmox + disque externe ou NAS dédié |
+| **1** copie hors site | Stockage cloud (ex. Backblaze B2) |
 
 ### Planification des snapshots
 
-| VM | Fréquence snapshot | Rétention | Justification |
-|---|---|---|---|
-| vm-dc | Hebdomadaire | 4 semaines | Changements rares (AD) |
-| vm-nas | Quotidienne | 7 jours | Fichiers CAO modifiés fréquemment |
-| vm-erp | Quotidienne | 7 jours | Base Odoo critique |
-| vm-web | Hebdomadaire | 4 semaines | Contenu moins critique |
+| VM / CT | Fréquence | Rétention |
+|---|---|---|
+| vm-nas | Quotidienne | 7 jours |
+| vm-erp | Quotidienne | 7 jours |
+| vm-dc | Hebdomadaire | 4 semaines |
+| vm-web | Hebdomadaire | 4 semaines |
+| vm-supervision | Hebdomadaire | 4 semaines |
+| ct-vpn | Hebdomadaire | 4 semaines |
 
-Les snapshots sont configurés via le planificateur Proxmox (Datacenter > Backup).
-
-### Sauvegarde des données applicatives
-
-En complément des snapshots VM, on exporte les données applicatives :
+### Sauvegardes applicatives (cron)
 
 ```bash
-# Sauvegarde PostgreSQL (Odoo) — quotidienne via cron
+# PostgreSQL (Odoo) — quotidienne à 2h
 0 2 * * * pg_dump -U odoo odoo > /backup/odoo_$(date +%Y%m%d).sql
 
-# Sauvegarde des partages Samba (CAO) — quotidienne
+# Partages Samba (CAO) — quotidienne à 3h
 0 3 * * * rsync -av /srv/samba/cao/ /backup/cao/
 ```
 
-## Points de défaillance identifiés
+---
 
-| Point de défaillance | Impact | Mitigation |
-|---|---|---|
-| Panne du nœud Proxmox | Tous les services indisponibles | Snapshot + procédure de redémarrage rapide documentée |
-| Corruption vm-erp | ERP inaccessible | Snapshot quotidien, restauration < 30 min |
-| Saturation disque vm-nas | Accès CAO bloqué | Alertes Proxmox sur l'espace disque, volume séparé |
-| Coupure réseau (Wi-Fi atelier) | Tablettes/douchettes hors ligne | VLAN atelier sur réseau filaire prioritaire |
-| Accès internet coupé | E-commerce inaccessible, pas d'e-mail | Hors périmètre VM ; prévoir 4G de secours |
+## Mode dégradé
 
-## Scénarios d'incident et procédures de reprise
-
-### Scénario 1 — Corruption de la VM ERP (cas le plus probable)
-
-**Symptôme :** Odoo ne répond plus, erreur PostgreSQL au démarrage.
-
-**Procédure :**
-
-```
-1. Se connecter à l'interface Proxmox (https://proxmox:8006)
-2. Arrêter vm-erp (Menu VM > Shutdown)
-3. Aller dans "Snapshots" de vm-erp
-4. Sélectionner le dernier snapshot quotidien valide
-5. Cliquer "Rollback"
-6. Démarrer vm-erp
-7. Vérifier que Odoo répond (http://192.168.30.30:8069)
-8. Prévenir les utilisateurs de la perte de données depuis le dernier snapshot
-```
-
-**Temps de restauration estimé : 15 à 30 minutes**
+| Service indisponible | Action immédiate |
+|---|---|
+| vm-nas | Accéder aux fichiers sur le disque de sauvegarde rsync (lecture seule) |
+| vm-erp | Prise de commandes manuelle, ressaisie Odoo après reprise |
+| vm-dc | Sessions ouvertes restent actives ; nouvelles connexions bloquées |
+| vm-web | Page de maintenance ; redirection vers commande téléphonique |
+| ct-vpn | Pas de mode dégradé (service nouvellement créé) |
 
 ---
 
-### Scénario 2 — Perte des fichiers CAO récents
+## Procédures de reprise
 
-**Symptôme :** Un fichier SolidWorks a été écrasé ou supprimé par erreur.
-
-**Procédure :**
+### Restauration d'une VM (cas général)
 
 ```
-1. Identifier la date du fichier perdu
-2. Sur vm-nas, naviguer dans /backup/cao/
-3. Retrouver la version du jour J-1 ou J-2
-4. Copier le fichier vers /srv/samba/cao/
-5. Vérifier l'accès depuis un poste client
+1. Se connecter à Proxmox (https://<IP_PROXMOX>:8006)
+2. Tenter un redémarrage simple de la VM
+3. Si échec : arrêter la VM → Snapshots → Rollback sur le dernier snapshot valide
+4. Redémarrer la VM et vérifier le service
+5. Informer les utilisateurs
+6. Consigner l'incident (cause, durée, actions)
 ```
 
-**Temps de restauration estimé : 5 à 10 minutes**
+### Récupération d'un fichier CAO isolé
+
+```
+1. Sur vm-nas, naviguer dans /backup/cao/
+2. Retrouver la version J-1 ou J-2
+3. Copier le fichier vers /srv/samba/cao/
+4. Vérifier l'accès depuis un poste client (\\10.33.81.219\CAO)
+```
+
+**Temps estimé : 5 à 10 minutes**
+
+### Panne totale du nœud Proxmox
+
+```
+1. Redémarrer physiquement le serveur
+2. Proxmox démarre automatiquement
+3. Les VMs en "Start at boot" redémarrent dans l'ordre ci-dessous
+4. Vérifier l'état de chaque service dans l'interface web
+```
+
+**Temps estimé : 10 à 20 minutes**
+
+### Ordre de démarrage (Proxmox > VM > Options > Start/Shutdown Order)
+
+```
+vm-dc         ordre 1 — délai 60s  (AD et DNS en premier)
+vm-nas        ordre 2 — délai 30s
+vm-erp        ordre 3 — délai 30s
+vm-web        ordre 4 — délai 0s
+vm-supervision ordre 5 — délai 0s
+ct-vpn        ordre 6 — délai 0s
+```
 
 ---
 
-### Scénario 3 — Redémarrage complet après panne matérielle
+## Limites
 
-**Symptôme :** Le mini-PC hôte Proxmox ne répond plus.
-
-**Procédure :**
-
-```
-1. Redémarrer physiquement le mini-PC
-2. Proxmox démarre automatiquement (service systemd)
-3. Les VMs configurées en "Start at boot" redémarrent automatiquement
-   (vm-dc, vm-nas, vm-erp)
-4. Vérifier l'état des VMs dans l'interface web
-5. Si une VM ne démarre pas, consulter les logs Proxmox
-   (Datacenter > Node > Syslog)
-```
-
-**Temps de reprise estimé : 10 à 20 minutes (démarrage Proxmox + VMs)**
-
-## Configuration recommandée dans Proxmox
-
-```
-# Ordre de démarrage des VMs (Proxmox > Options > Start/Shutdown Order)
-vm-dc  : ordre 1, délai 60s  (AD doit démarrer en premier)
-vm-nas : ordre 2, délai 30s
-vm-erp : ordre 3, délai 30s
-vm-web : ordre 4, délai 0s
-```
-
-## Tests de restauration
-
-Un test de restauration doit être réalisé **une fois par mois** :
-
-- Restaurer vm-erp depuis un snapshot sur une VM temporaire
-- Vérifier que l'accès Odoo fonctionne
-- Vérifier qu'un fichier CAO récent est bien présent dans la sauvegarde
-- Consigner le résultat dans un fichier `tests-restauration.md`
+- RTO 30 min sur vm-nas **non validé en conditions réelles** (4 To, fichiers ~1 Go — à tester en priorité)
+- Snapshots stockés sur le même hôte : un sinistre physique rendrait la sauvegarde inopérante
+- Pas de redondance matérielle (nœud Proxmox unique)
+- Risque Wi-Fi/CPL atelier hors périmètre de la virtualisation — voir [04-limites-compromis.md](./04-limites-compromis.md)
