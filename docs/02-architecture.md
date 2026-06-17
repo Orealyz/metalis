@@ -29,14 +29,14 @@ Proxmox VE est installé directement sur le matériel (mini-PC dédié ou VPS), 
 
 ```
 Proxmox VE (hôte physique)
-├── [CT] ct-vpn        — Debian 12            — WireGuard VPN
-├── [VM] vm-dc         — Windows Server 2022  — Active Directory + DNS
-├── [VM] vm-nas        — Debian 12            — Fichiers CAO (Samba)
-├── [VM] vm-erp        — Debian 12            — Odoo 17 + PostgreSQL
-├── [VM] vm-web        — Debian 12            — WordPress + WooCommerce (Nginx)
-├── [VM] vm-supervision — Debian 12           — Prometheus + Grafana + Loki
-├── [VM] vm-client     — Windows 10           — Poste client de test
-└── [VM] vm-clone      — Debian 12            — Template de base (prêt à cloner)
+├── [CT] ct-vpn         10.33.81.208  — Debian 12            — WireGuard VPN
+├── [VM] vm-dc          10.33.81.222  — Windows Server 2022  — Active Directory + DNS
+├── [VM] vm-nas         10.33.81.219  — Debian 12            — Fichiers CAO (Samba)
+├── [VM] vm-erp         10.33.81.221  — Debian 12            — Odoo 17 + PostgreSQL
+├── [VM] vm-web         10.33.81.223  — Debian 12            — WordPress + WooCommerce (Nginx)
+├── [VM] vm-supervision 10.33.81.224  — Debian 12            — Prometheus + Grafana + Loki
+├── [VM] vm-client      10.33.81.211  — Windows 10           — Poste client de test
+└── [VM] vm-clone       —             — Debian 12            — Template de base (prêt à cloner)
 ```
 
 ### Rôles et justifications
@@ -55,6 +55,15 @@ Isolée de l'ERP. Un crash ou une mise à jour WooCommerce n'affecte pas la prod
 
 **vm-client** — Poste de test  
 Permet de valider les accès réseau, les droits Samba et le comportement utilisateur sans toucher aux postes physiques.
+
+**ct-vpn** — WireGuard (conteneur LXC)  
+Conteneur léger dédié au VPN. Isolé des VMs de production pour limiter la surface d'attaque. Écoute sur UDP 51820 et donne accès au réseau interne pour les commerciaux en télétravail et le prestataire CNC.
+
+**vm-supervision** — Prometheus + Grafana + Loki  
+Collecte les métriques et logs de toutes les VMs. Les alertes sont envoyées sur Telegram via Alertmanager. Isolée pour ne pas impacter la production si elle tombe.
+
+**vm-clone** — Template de base  
+VM Debian 12 préconfigurée (ssh, outils de base, agent Proxmox) servant de point de départ pour créer rapidement de nouvelles VMs. Ne tourne pas en production.
 
 ## Réseau virtualisé
 
@@ -85,8 +94,8 @@ Permet de valider les accès réseau, les droits Samba et le comportement utilis
 
 ### Accès distant
 
-- **Commerciaux en télétravail** : VPN WireGuard déployé sur vm-erp (port UDP 51820), tunnelé vers le VLAN Serveurs
-- **Prestataire CNC** : accès VPN restreint, limité au VLAN 20 (atelier) via règles firewall Proxmox
+- **Commerciaux en télétravail** : VPN WireGuard déployé sur `ct-vpn` (10.33.81.208, port UDP 51820), tunnelé vers le réseau interne
+- **Prestataire CNC** : accès VPN restreint via `ct-vpn`, limité aux ressources atelier via règles firewall Proxmox
 
 ## Estimation des ressources
 
@@ -101,11 +110,14 @@ Permet de valider les accès réseau, les droits Samba et le comportement utilis
 
 ### Répartition par VM
 
-| VM | vCPU | RAM | Disque OS | Disque données |
+| VM / CT | vCPU | RAM | Disque OS | Disque données |
 |---|---|---|---|---|
+| ct-vpn (CT) | 1 | 512 Mo | 8 Go | — |
 | vm-dc | 2 | 4 Go | 60 Go | — |
 | vm-nas | 2 | 4 Go | 40 Go | 500 Go |
 | vm-erp | 4 | 8 Go | 60 Go | 100 Go |
 | vm-web | 2 | 4 Go | 40 Go | — |
+| vm-supervision | 2 | 4 Go | 40 Go | — |
 | vm-client | 2 | 4 Go | 60 Go | — |
-| **Total** | **12** | **24 Go** | **260 Go** | **600 Go** |
+| vm-clone | 1 | 2 Go | 20 Go | — |
+| **Total** | **16** | **30,5 Go** | **328 Go** | **600 Go** |

@@ -2,37 +2,43 @@
 
 ## Plan d'adressage
 
-| VLAN | Nom | Réseau | Passerelle | Usage |
-|---|---|---|---|---|
-| 10 | Bureaux | 192.168.10.0/24 | 192.168.10.1 | Postes administratifs, commerciaux |
-| 20 | Atelier | 192.168.20.0/24 | 192.168.20.1 | CNC, douchettes, tablettes |
-| 30 | Serveurs | 192.168.30.0/24 | 192.168.30.1 | VMs Proxmox (DC, NAS, ERP) |
-| 40 | DMZ | 192.168.40.0/24 | 192.168.40.1 | vm-web (exposition publique) |
-| 99 | Management | 192.168.99.0/24 | 192.168.99.1 | Interface Proxmox (accès restreint) |
+> Environnement lab : réseau plat `10.33.81.0/24`. Le découpage VLAN ci-dessous est l'architecture cible pour un déploiement en production.
+
+| VLAN | Nom | Réseau cible | Usage |
+|---|---|---|---|
+| 10 | Bureaux | 192.168.10.0/24 | Postes administratifs, commerciaux |
+| 20 | Atelier | 192.168.20.0/24 | CNC, douchettes, tablettes |
+| 30 | Serveurs | 192.168.30.0/24 | VMs Proxmox (DC, NAS, ERP) |
+| 40 | DMZ | 192.168.40.0/24 | vm-web (exposition publique) |
+| 99 | Management | 192.168.99.0/24 | Interface Proxmox (accès restreint) |
 
 ## Hôtes fixes
 
-| Hôte | IP | VLAN | Rôle |
+| Hôte | ID Proxmox | IP | Rôle |
 |---|---|---|---|
-| Proxmox (management) | 192.168.99.10 | 99 | Interface d'administration |
-| vm-dc | 192.168.30.10 | 30 | Active Directory + DNS |
-| vm-nas | 192.168.30.20 | 30 | Fichiers CAO |
-| vm-erp | 192.168.30.30 | 30 | Odoo 17 |
-| vm-web | 192.168.40.10 | 40 | WordPress + WooCommerce |
-| vm-client | 192.168.10.50 | 10 | Poste de test |
+| `ct-vpn` (CT) | 100 | 10.33.81.208 | WireGuard VPN |
+| `vm-client` | 101 | 10.33.81.211 | Poste de test |
+| `vm-dc` | 102 | 10.33.81.222 | Active Directory + DNS |
+| `vm-supervision` | 103 | 10.33.81.224 | Prometheus + Grafana + Loki |
+| `vm-erp` | 104 | 10.33.81.221 | Odoo 17 |
+| `vm-nas` | 105 | 10.33.81.219 | Fichiers CAO (Samba) |
+| `vm-clone` | 106 | — | Template de base |
+| `vm-web` | 107 | 10.33.81.223 | WordPress + WooCommerce |
 
-## Règles de flux inter-VLAN
+## Règles de flux
 
 | Source | Destination | Port | Autorisation |
 |---|---|---|---|
-| VLAN 10 (Bureaux) | VLAN 30 (Serveurs) | 445 (SMB), 8069 (Odoo) | ✅ Autorisé |
-| VLAN 20 (Atelier) | VLAN 30 (Serveurs) | 445 (SMB) | ✅ Autorisé (lecture seule) |
-| VLAN 40 (DMZ) | VLAN 30 (Serveurs) | 5432 (API Odoo) | ✅ Autorisé (API uniquement) |
-| VLAN 40 (DMZ) | VLAN 10/20/30 | Tout | ❌ Bloqué |
-| Internet | VLAN 40 (DMZ) | 80, 443 | ✅ Autorisé |
-| Internet | VLAN 30 | Tout sauf 51820 UDP | ❌ Bloqué |
-| VPN WireGuard | VLAN 30 | 8069 (Odoo) | ✅ Autorisé |
-| VPN Prestataire | VLAN 20 | Ports CNC | ✅ Autorisé (restreint) |
+| vm-client | vm-nas | 445 (SMB) | ✅ Autorisé |
+| vm-client | vm-erp | 8069 (Odoo) | ✅ Autorisé |
+| vm-web | vm-erp | API Odoo | ✅ Autorisé (API uniquement) |
+| Internet | vm-web | 80, 443 | ✅ Autorisé |
+| Internet | ct-vpn | 51820 UDP (WireGuard) | ✅ Autorisé |
+| ct-vpn | vm-erp | 8069 (Odoo) | ✅ Autorisé (commerciaux) |
+| ct-vpn | Atelier VLAN 20 | Ports CNC | ✅ Autorisé (prestataire restreint) |
+| Internet | vm-dc / vm-nas / vm-erp | Tout | ❌ Bloqué |
+| vm-supervision | Toutes VMs | 9100 (node_exporter) | ✅ Autorisé |
+| vm-supervision | Telegram (Internet) | 443 | ✅ Autorisé (alertes) |
 
 ## Diagramme réseau (Mermaid)
 
@@ -40,25 +46,23 @@
 graph LR
     Internet(("Internet")) --> FW["Routeur / Firewall"]
 
-    FW --> |"VLAN 10"| SW10["Switch Bureaux"]
-    FW --> |"VLAN 20"| SW20["Switch Atelier"]
-    FW --> |"VLAN 30"| PVE["Proxmox VE\n(Linux Bridge)"]
-    FW --> |"VLAN 40"| DMZ["DMZ Bridge"]
+    FW --> PVE["Proxmox VE\n10.33.81.0/24"]
 
-    SW10 --> P10["Postes bureaux\n(192.168.10.x)"]
-    SW10 --> C10["vm-client\n192.168.10.50"]
+    PVE --> VPN["ct-vpn [CT]\n10.33.81.208\nWireGuard"]
+    PVE --> DC["vm-dc\n10.33.81.222\nAD + DNS"]
+    PVE --> NAS["vm-nas\n10.33.81.219\nSamba / CAO"]
+    PVE --> ERP["vm-erp\n10.33.81.221\nOdoo 17"]
+    PVE --> WEB["vm-web\n10.33.81.223\nWP + WooComm."]
+    PVE --> SUP["vm-supervision\n10.33.81.224\nProm + Graf + Loki"]
+    PVE --> CLIENT["vm-client\n10.33.81.211\nPoste test"]
 
-    SW20 --> CNC["Machines CNC\n(192.168.20.x)"]
-    SW20 --> TAB["Tablettes\n(192.168.20.x)"]
-
-    PVE --> DC["vm-dc\n192.168.30.10"]
-    PVE --> NAS["vm-nas\n192.168.30.20"]
-    PVE --> ERP["vm-erp\n192.168.30.30"]
-
-    DMZ --> WEB["vm-web\n192.168.40.10"]
-
-    Internet --> |"WireGuard\nUDP 51820"| ERP
+    Internet --> |"WireGuard UDP 51820"| VPN
     Internet --> |"HTTPS 443"| WEB
+
+    VPN --> |"tunnel"| ERP
+    VPN --> |"tunnel"| DC
+
+    SUP --> |"alertes HTTPS"| TELEGRAM(("Telegram"))
 ```
 
 ## Configuration Proxmox — Linux Bridge
@@ -69,15 +73,15 @@ graph LR
 auto lo
 iface lo inet loopback
 
-# Interface physique (trunk VLAN)
+# Interface physique
 auto enp3s0
 iface enp3s0 inet manual
 
-# Bridge principal (VLAN-aware)
+# Bridge principal
 auto vmbr0
 iface vmbr0 inet static
-    address 192.168.99.10/24
-    gateway 192.168.99.1
+    address 10.33.81.x/24
+    gateway 10.33.81.1
     bridge-ports enp3s0
     bridge-stp off
     bridge-fd 0
@@ -85,4 +89,4 @@ iface vmbr0 inet static
     bridge-vids 2-4094
 ```
 
-Chaque VM se voit attribuer un tag VLAN dans la configuration réseau Proxmox (onglet Hardware > Network Device > VLAN Tag).
+Chaque VM se voit attribuer une IP fixe dans la configuration réseau Proxmox (onglet Hardware > Network Device).
