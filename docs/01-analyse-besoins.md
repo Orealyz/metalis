@@ -55,7 +55,7 @@ La virtualisation répond directement aux problèmes de METALIS :
 
 | ID | Nom | IP | État / rôle |
 |---|---|---|---|
-| 100 | `ct-vpn` | 10.33.81.208 | Wireguard configuré (containerisé) |
+| 100 | `ct-vpn` | 10.33.81.208 | Wireguard configuré (contenairisé) |
 | 101 | `vm-client` | 10.33.81.211 | Accès partage SMB + présent sur le domaine (co à un compte user) |
 | 102 | `vm-dc` | 10.33.81.222 | AD configuré, utilisateurs créés |
 | 103 | `vm-supervision` | 10.33.81.224 | Prometheus, Grafana et Loki — alertes Telegram |
