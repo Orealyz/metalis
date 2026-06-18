@@ -1,4 +1,4 @@
-# 03 — Continuité de service — METALIS
+# 03 — Continuité et reprise de service — METALIS
 
 La direction a posé la question clé : *"Que se passe-t-il si tout s'arrête un vendredi après-midi ?"*
 
