@@ -2,7 +2,12 @@
 # snapshot-backup.sh — Snapshots automatiques des VMs critiques METALIS
 # Usage : bash snapshot-backup.sh
 # Recommandé : planifier via cron sur le nœud Proxmox
-#   0 2 * * * root /opt/mspr-metalis/scripts/snapshot-backup.sh >> /var/log/snapshots-metalis.log 2>&1
+#
+#   Snapshots toutes les 4h (vm-nas, vm-erp, vm-web) :
+#   0 */4 * * * root /opt/mspr-metalis/scripts/snapshot-backup.sh --mode 4h >> /var/log/snapshots-metalis.log 2>&1
+#
+#   Snapshots quotidiens (vm-dc, vm-supervision) :
+#   0 2 * * * root /opt/mspr-metalis/scripts/snapshot-backup.sh --mode daily >> /var/log/snapshots-metalis.log 2>&1
 
 set -euo pipefail
 
@@ -12,12 +17,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROXMOX_NODE="${PROXMOX_NODE:-pve}"
 DATE=$(date +%Y%m%d-%H%M)
 RETENTION_DAYS="${SNAPSHOT_RETENTION_DAYS:-7}"
+MODE="${1:-daily}"
 
-# VMs à sauvegarder (VMID:Rétention en jours)
-DAILY_VMS="101:7 102:7"    # vm-nas, vm-erp — snapshot quotidien
-WEEKLY_VMS="100:28 103:28" # vm-dc, vm-web — snapshot hebdomadaire
+# VMs snapshots toutes les 4h (RPO 4h) : vm-nas, vm-erp, vm-web
+FOURH_VMS="105:7 104:7 107:7"
 
-echo "=== Snapshots METALIS — $DATE ==="
+# VMs snapshots quotidiens (RPO 24h) : vm-dc, vm-supervision
+DAILY_VMS="102:28 103:28"
+
+echo "=== Snapshots METALIS [$MODE] — $DATE ==="
 
 # -------------------------------------------------------
 # Fonction : créer un snapshot
@@ -30,7 +38,7 @@ snapshot_vm() {
     pvesh create /nodes/$PROXMOX_NODE/qemu/$VMID/snapshot \
         --snapname "$SNAP_NAME" \
         --description "Snapshot automatique du $DATE" \
-        --vmstate 0  # Sans état mémoire (plus rapide)
+        --vmstate 0
 
     echo "Snapshot $VMID OK"
 }
@@ -67,29 +75,29 @@ for s in snaps:
 }
 
 # -------------------------------------------------------
-# Snapshots quotidiens
+# Snapshots toutes les 4h
 # -------------------------------------------------------
-echo "--- Snapshots quotidiens ---"
-for entry in $DAILY_VMS; do
-    VMID="${entry%%:*}"
-    RETENTION="${entry##*:}"
-    snapshot_vm "$VMID"
-    purge_old_snapshots "$VMID" "$RETENTION"
-done
-
-# -------------------------------------------------------
-# Snapshots hebdomadaires (uniquement le lundi)
-# -------------------------------------------------------
-if [[ $(date +%u) -eq 1 ]]; then
-    echo "--- Snapshots hebdomadaires (lundi) ---"
-    for entry in $WEEKLY_VMS; do
+if [[ "$MODE" == "4h" ]]; then
+    echo "--- Snapshots 4h : vm-nas (105), vm-erp (104), vm-web (107) ---"
+    for entry in $FOURH_VMS; do
         VMID="${entry%%:*}"
         RETENTION="${entry##*:}"
         snapshot_vm "$VMID"
         purge_old_snapshots "$VMID" "$RETENTION"
     done
-else
-    echo "--- Snapshots hebdomadaires ignorés (pas lundi) ---"
+fi
+
+# -------------------------------------------------------
+# Snapshots quotidiens
+# -------------------------------------------------------
+if [[ "$MODE" == "daily" ]]; then
+    echo "--- Snapshots quotidiens : vm-dc (102), vm-supervision (103) ---"
+    for entry in $DAILY_VMS; do
+        VMID="${entry%%:*}"
+        RETENTION="${entry##*:}"
+        snapshot_vm "$VMID"
+        purge_old_snapshots "$VMID" "$RETENTION"
+    done
 fi
 
 echo "=== Terminé — $DATE ==="
