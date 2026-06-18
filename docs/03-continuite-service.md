@@ -13,7 +13,7 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 | Fichiers CAO | vm-nas | **30 min** | 4h |
 | Active Directory | vm-dc | 1h | 7 jours |
 | ERP Odoo | vm-erp | 2h | 4h |
-| Site e-commerce | vm-web | 4h | 7 jours |
+| Site e-commerce | vm-web | 4h | 4h |
 | VPN | ct-vpn | 4h | N/A |
 
 > vm-nas est le service **le plus critique** : le client a déjà subi une panne NAS avec perte de données. Son indisponibilité bloque toute la production.
@@ -37,7 +37,7 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 | vm-nas | Toutes les 4h | 7 jours |
 | vm-erp | Toutes les 4h | 7 jours |
 | vm-dc | Hebdomadaire | 4 semaines |
-| vm-web | Hebdomadaire | 4 semaines |
+| vm-web | Toutes les 4h | 7 jours |
 | vm-supervision | Hebdomadaire | 4 semaines |
 | ct-vpn | Hebdomadaire | 4 semaines |
 
