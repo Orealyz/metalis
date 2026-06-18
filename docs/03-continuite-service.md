@@ -10,9 +10,9 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 
 | Service | VM | RTO cible | RPO cible |
 |---|---|---|---|
-| Fichiers CAO | vm-nas | **30 min** | 24h |
+| Fichiers CAO | vm-nas | **30 min** | 4h |
 | Active Directory | vm-dc | 1h | 7 jours |
-| ERP Odoo | vm-erp | 2h | 24h |
+| ERP Odoo | vm-erp | 2h | 4h |
 | Site e-commerce | vm-web | 4h | 7 jours |
 | VPN | ct-vpn | 4h | N/A |
 
@@ -34,8 +34,8 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 
 | VM / CT | Fréquence | Rétention |
 |---|---|---|
-| vm-nas | Quotidienne | 7 jours |
-| vm-erp | Quotidienne | 7 jours |
+| vm-nas | Toutes les 4h | 7 jours |
+| vm-erp | Toutes les 4h | 7 jours |
 | vm-dc | Hebdomadaire | 4 semaines |
 | vm-web | Hebdomadaire | 4 semaines |
 | vm-supervision | Hebdomadaire | 4 semaines |
