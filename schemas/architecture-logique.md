@@ -7,14 +7,14 @@ graph TD
     subgraph Physique["Hôte physique — Mini-PC / VPS"]
         PVE["Proxmox VE"]
 
-        subgraph Réseau["Réseau 10.33.81.0/24"]
-            VPN["ct-vpn [CT]\nDebian 12\nWireGuard VPN\n10.33.81.208"]
-            DC["vm-dc\nWindows Server 2022\nActive Directory + DNS\n10.33.81.222"]
-            NAS["vm-nas\nDebian 12\nSamba (fichiers CAO)\n10.33.81.219"]
-            ERP["vm-erp\nDebian 12\nOdoo 17 + PostgreSQL\n10.33.81.221"]
-            WEB["vm-web\nDebian 12\nWordPress + WooCommerce\n10.33.81.223"]
-            SUP["vm-supervision\nDebian 12\nPrometheus + Grafana + Loki\n10.33.81.224"]
-            CLIENT["vm-client\nWindows 10 (test)\n10.33.81.211"]
+        subgraph Réseau["Réseau 192.168.1.0/24"]
+            VPN["ct-vpn [CT]\nDebian 12\nWireGuard VPN\n192.168.1.208"]
+            DC["vm-dc\nWindows Server 2022\nActive Directory + DNS\n192.168.1.222"]
+            NAS["vm-nas\nDebian 12\nSamba (fichiers CAO)\n192.168.1.219"]
+            ERP["vm-erp\nDebian 12\nOdoo 17 + PostgreSQL\n192.168.1.221"]
+            WEB["vm-web\nDebian 12\nWordPress + WooCommerce\n192.168.1.223"]
+            SUP["vm-supervision\nDebian 12\nPrometheus + Grafana + Loki\n192.168.1.224"]
+            CLIENT["vm-client\nWindows 10 (test)\n192.168.1.211"]
             CLONE["vm-clone\nDebian 12\nTemplate de base"]
         end
     end
@@ -62,27 +62,27 @@ graph TD
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                         Hôte Proxmox VE                                 │
-│                      Réseau : 10.33.81.0/24                             │
+│                      Réseau : 192.168.1.0/24                             │
 │                                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
 │  │  [CT] ct-vpn │  │   vm-dc      │  │   vm-nas     │                  │
 │  │  Debian 12   │  │ Win Srv 2022 │  │  Debian 12   │                  │
 │  │  WireGuard   │  │  AD + DNS    │  │ Samba / CAO  │                  │
-│  │ .81.208      │  │ .81.222      │  │ .81.219      │                  │
+│  │ .1.208      │  │ .1.222      │  │ .1.219      │                  │
 │  └──────────────┘  └──────────────┘  └──────────────┘                  │
 │                                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
 │  │   vm-erp     │  │   vm-web     │  │ vm-supervision│                 │
 │  │  Debian 12   │  │  Debian 12   │  │  Debian 12   │                  │
 │  │ Odoo + PgSQL │  │ WP+WooComm.  │  │ Prom+Graf+Loki│                 │
-│  │ .81.221      │  │ .81.223      │  │ .81.224      │                  │
+│  │ .1.221      │  │ .1.223      │  │ .1.224      │                  │
 │  └──────────────┘  └──────────────┘  └──────────────┘                  │
 │                                                                         │
 │  ┌──────────────┐  ┌──────────────┐                                     │
 │  │  vm-client   │  │  vm-clone    │                                     │
 │  │  Windows 10  │  │  Debian 12   │                                     │
 │  │  (test)      │  │  (template)  │                                     │
-│  │ .81.211      │  │      —       │                                     │
+│  │ .1.211      │  │      —       │                                     │
 │  └──────────────┘  └──────────────┘                                     │
 └─────────────────────────────────────────────────────────────────────────┘
 
@@ -92,8 +92,8 @@ VLAN 20 — Atelier (physique)
   └── Imprimantes étiquettes, douchettes
 
 Accès externes :
-  ├── Commerciaux télétravail → WireGuard UDP 51820 → ct-vpn (10.33.81.208)
+  ├── Commerciaux télétravail → WireGuard UDP 51820 → ct-vpn (192.168.1.208)
   ├── Prestataire CNC → VPN restreint → ct-vpn → VLAN 20 uniquement
-  ├── Clients web → Internet → vm-web (10.33.81.223)
+  ├── Clients web → Internet → vm-web (192.168.1.223)
   └── Alertes supervision → vm-supervision → Telegram
 ```

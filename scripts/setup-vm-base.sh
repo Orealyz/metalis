@@ -19,8 +19,8 @@ PROXMOX_NODE="${PROXMOX_NODE:-pve}"
 STORAGE_POOL="${STORAGE_POOL:-local-lvm}"
 BRIDGE="${BRIDGE:-vmbr0}"
 VM_PASSWORD="${VM_PASSWORD:-ChangeMe123!}"
-GW="10.33.81.254"
-MASK="25"
+GW="192.168.1.254"
+MASK="24"
 
 echo "=== Déploiement METALIS sur le nœud $PROXMOX_NODE ==="
 
@@ -62,12 +62,12 @@ create_vm() {
 # Note : ct-vpn (100) est un conteneur LXC, à créer manuellement
 # -------------------------------------------------------
 # VMID  Nom               vCPU  RAM    Disque  IP
-create_vm 101 "vm-client"     2   4096   60     "10.33.81.211"
-create_vm 102 "vm-dc"         2   4096   60     "10.33.81.222"
-create_vm 103 "vm-supervision" 2  4096   40     "10.33.81.224"
-create_vm 104 "vm-erp"        4   8192   60     "10.33.81.221"
-create_vm 105 "vm-nas"        2   4096   40     "10.33.81.219"
-create_vm 107 "vm-web"        2   4096   40     "10.33.81.223"
+create_vm 101 "vm-client"     2   4096   60     "192.168.1.211"
+create_vm 102 "vm-dc"         2   4096   60     "192.168.1.222"
+create_vm 103 "vm-supervision" 2  4096   40     "192.168.1.224"
+create_vm 104 "vm-erp"        4   8192   60     "192.168.1.221"
+create_vm 105 "vm-nas"        2   4096   40     "192.168.1.219"
+create_vm 107 "vm-web"        2   4096   40     "192.168.1.223"
 
 # vm-clone : template de base sans IP fixe
 create_vm 106 "vm-clone"      1   2048   20     "dhcp"

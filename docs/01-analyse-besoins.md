@@ -55,24 +55,24 @@ La virtualisation répond directement aux problèmes de METALIS :
 
 | ID | Nom | IP | État / rôle |
 |---|---|---|---|
-| 100 | `ct-vpn` | 10.33.81.208 | Wireguard configuré (contenairisé) |
-| 101 | `vm-client` | 10.33.81.211 | Accès partage SMB + présent sur le domaine (co à un compte user) |
-| 102 | `vm-dc` | 10.33.81.222 | AD configuré, utilisateurs créés |
-| 103 | `vm-supervision` | 10.33.81.224 | Prometheus, Grafana et Loki — alertes Telegram |
-| 104 | `vm-erp` | 10.33.81.221 | Odoo en place |
-| 105 | `vm-nas` | 10.33.81.219 | SMB configuré, conforme aux accès AD |
+| 100 | `ct-vpn` | 192.168.1.208 | Wireguard configuré (contenairisé) |
+| 101 | `vm-client` | 192.168.1.211 | Accès partage SMB + présent sur le domaine (co à un compte user) |
+| 102 | `vm-dc` | 192.168.1.222 | AD configuré, utilisateurs créés |
+| 103 | `vm-supervision` | 192.168.1.224 | Prometheus, Grafana et Loki — alertes Telegram |
+| 104 | `vm-erp` | 192.168.1.221 | Odoo en place |
+| 105 | `vm-nas` | 192.168.1.219 | SMB configuré, conforme aux accès AD |
 | 106 | `vm-clone` | — | Config de base en place — VM prête à cloner |
-| 107 | `vm-web` | 10.33.81.223 | WordPress et WooCommerce configurés |
+| 107 | `vm-web` | 192.168.1.223 | WordPress et WooCommerce configurés |
 
 ## Logiciels et usages retenus
 
 | Domaine | Outil | VM associée | IP |
 |---|---|---|---|
-| Identité / partages | Active Directory + Samba | `vm-dc` (102) | 10.33.81.222 |
-| Fichiers CAO | Samba sur Debian | `vm-nas` (105) | 10.33.81.219 |
-| ERP | Odoo 17 | `vm-erp` (104) | 10.33.81.221 |
-| E-commerce + vitrine | WooCommerce + WordPress | `vm-web` (107) | 10.33.81.223 |
-| Accès distant | WireGuard | `ct-vpn` (100) | 10.33.81.208 |
-| Supervision | Prometheus + Grafana + Loki | `vm-supervision` (103) | 10.33.81.224 |
+| Identité / partages | Active Directory + Samba | `vm-dc` (102) | 192.168.1.222 |
+| Fichiers CAO | Samba sur Debian | `vm-nas` (105) | 192.168.1.219 |
+| ERP | Odoo 17 | `vm-erp` (104) | 192.168.1.221 |
+| E-commerce + vitrine | WooCommerce + WordPress | `vm-web` (107) | 192.168.1.223 |
+| Accès distant | WireGuard | `ct-vpn` (100) | 192.168.1.208 |
+| Supervision | Prometheus + Grafana + Loki | `vm-supervision` (103) | 192.168.1.224 |
 | Messagerie | Microsoft 365 (cloud, inchangé) | — | — |
 | Atelier (CNC, étiquettes) | Accès réseau via VLAN dédié | VLAN 20 | — |

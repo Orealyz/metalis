@@ -4,20 +4,20 @@
 
 | Réseau | Masque | Usage |
 |---|---|---|
-| 10.33.81.0/24 | /24 | Réseau lab — toutes les VMs et le CT Proxmox |
+| 192.168.1.0/24 | /24 | Réseau lab — toutes les VMs et le CT Proxmox |
 
 ## Hôtes fixes
 
 | Hôte | ID Proxmox | IP | Rôle |
 |---|---|---|---|
-| `ct-vpn` (CT) | 100 | 10.33.81.208 | WireGuard VPN |
-| `vm-client` | 101 | 10.33.81.211 | Poste de test |
-| `vm-dc` | 102 | 10.33.81.222 | Active Directory + DNS |
-| `vm-supervision` | 103 | 10.33.81.224 | Prometheus + Grafana + Loki |
-| `vm-erp` | 104 | 10.33.81.221 | Odoo 17 |
-| `vm-nas` | 105 | 10.33.81.219 | Fichiers CAO (Samba) |
+| `ct-vpn` (CT) | 100 | 192.168.1.208 | WireGuard VPN |
+| `vm-client` | 101 | 192.168.1.211 | Poste de test |
+| `vm-dc` | 102 | 192.168.1.222 | Active Directory + DNS |
+| `vm-supervision` | 103 | 192.168.1.224 | Prometheus + Grafana + Loki |
+| `vm-erp` | 104 | 192.168.1.221 | Odoo 17 |
+| `vm-nas` | 105 | 192.168.1.219 | Fichiers CAO (Samba) |
 | `vm-clone` | 106 | — | Template de base |
-| `vm-web` | 107 | 10.33.81.223 | WordPress + WooCommerce |
+| `vm-web` | 107 | 192.168.1.223 | WordPress + WooCommerce |
 
 ## Règles de flux
 
@@ -40,15 +40,15 @@
 graph LR
     Internet(("Internet")) --> FW["Routeur / Firewall"]
 
-    FW --> PVE["Proxmox VE\n10.33.81.0/24"]
+    FW --> PVE["Proxmox VE\n192.168.1.0/24"]
 
-    PVE --> VPN["ct-vpn [CT]\n10.33.81.208\nWireGuard"]
-    PVE --> DC["vm-dc\n10.33.81.222\nAD + DNS"]
-    PVE --> NAS["vm-nas\n10.33.81.219\nSamba / CAO"]
-    PVE --> ERP["vm-erp\n10.33.81.221\nOdoo 17"]
-    PVE --> WEB["vm-web\n10.33.81.223\nWP + WooComm."]
-    PVE --> SUP["vm-supervision\n10.33.81.224\nProm + Graf + Loki"]
-    PVE --> CLIENT["vm-client\n10.33.81.211\nPoste test"]
+    PVE --> VPN["ct-vpn [CT]\n192.168.1.208\nWireGuard"]
+    PVE --> DC["vm-dc\n192.168.1.222\nAD + DNS"]
+    PVE --> NAS["vm-nas\n192.168.1.219\nSamba / CAO"]
+    PVE --> ERP["vm-erp\n192.168.1.221\nOdoo 17"]
+    PVE --> WEB["vm-web\n192.168.1.223\nWP + WooComm."]
+    PVE --> SUP["vm-supervision\n192.168.1.224\nProm + Graf + Loki"]
+    PVE --> CLIENT["vm-client\n192.168.1.211\nPoste test"]
 
     Internet --> |"WireGuard UDP 51820"| VPN
     Internet --> |"HTTPS 443"| WEB
@@ -74,8 +74,8 @@ iface enp3s0 inet manual
 # Bridge principal
 auto vmbr0
 iface vmbr0 inet static
-    address 10.33.81.x/24
-    gateway 10.33.81.1
+    address 192.168.1.x/24
+    gateway 192.168.1.1
     bridge-ports enp3s0
     bridge-stp off
     bridge-fd 0

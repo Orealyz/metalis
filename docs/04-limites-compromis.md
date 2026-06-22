@@ -20,11 +20,11 @@ SolidWorks est gourmand en ressources graphiques. L'accès aux fichiers CAO via 
 
 ### Test du VPN limité au réseau de l'établissement
 
-L'infrastructure de démonstration est déployée sur le réseau interne d'Ynov (10.33.81.0/24), qui n'est pas accessible depuis l'extérieur. Le VPN WireGuard (ct-vpn) a donc été testé et validé depuis l'intérieur du réseau de l'établissement, en utilisant l'IP interne du conteneur comme Endpoint dans les configurations clients.
+L'infrastructure de démonstration est déployée sur le réseau interne d'Ynov (192.168.1.0/24), qui n'est pas accessible depuis l'extérieur. Le VPN WireGuard (ct-vpn) a donc été testé et validé depuis l'intérieur du réseau de l'établissement, en utilisant l'IP interne du conteneur comme Endpoint dans les configurations clients.
 
 En conditions réelles chez METALIS, l'Endpoint serait l'IP publique de la box/routeur de l'entreprise, avec un port forwarding du port UDP 51821 configuré sur ce routeur vers l'IP interne de ct-vpn. Ce mécanisme est strictement identique en pratique (même protocole, même configuration côté serveur) — seul l'endpoint changerait dans les fichiers de configuration distribués aux commerciaux.
 
-Cette limite est purement liée à l'environnement de test (pas de contrôle sur le NAT/firewall de l'établissement pour ouvrir un port vers l'extérieur) et ne remet pas en cause la validité de la solution technique : le tunnel WireGuard fonctionne, l'authentification par clés est opérationnelle, et le routage vers le réseau interne (10.33.81.0/24) a été vérifié avec succès.
+Cette limite est purement liée à l'environnement de test (pas de contrôle sur le NAT/firewall de l'établissement pour ouvrir un port vers l'extérieur) et ne remet pas en cause la validité de la solution technique : le tunnel WireGuard fonctionne, l'authentification par clés est opérationnelle, et le routage vers le réseau interne (192.168.1.0/24) a été vérifié avec succès.
 
 ---
 

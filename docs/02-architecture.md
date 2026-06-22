@@ -29,13 +29,13 @@ Proxmox VE est installé directement sur le matériel (mini-PC dédié ou VPS), 
 
 ```
 Proxmox VE (hôte physique)
-├── [CT] ct-vpn         10.33.81.208  — Debian 12            — WireGuard VPN
-├── [VM] vm-dc          10.33.81.222  — Windows Server 2022  — Active Directory + DNS
-├── [VM] vm-nas         10.33.81.219  — Debian 12            — Fichiers CAO (Samba)
-├── [VM] vm-erp         10.33.81.221  — Debian 12            — Odoo 17 + PostgreSQL
-├── [VM] vm-web         10.33.81.223  — Debian 12            — WordPress + WooCommerce (Nginx)
-├── [VM] vm-supervision 10.33.81.224  — Debian 12            — Prometheus + Grafana + Loki
-├── [VM] vm-client      10.33.81.211  — Windows 10           — Poste client de test
+├── [CT] ct-vpn         192.168.1.208  — Debian 12            — WireGuard VPN
+├── [VM] vm-dc          192.168.1.222  — Windows Server 2022  — Active Directory + DNS
+├── [VM] vm-nas         192.168.1.219  — Debian 12            — Fichiers CAO (Samba)
+├── [VM] vm-erp         192.168.1.221  — Debian 12            — Odoo 17 + PostgreSQL
+├── [VM] vm-web         192.168.1.223  — Debian 12            — WordPress + WooCommerce (Nginx)
+├── [VM] vm-supervision 192.168.1.224  — Debian 12            — Prometheus + Grafana + Loki
+├── [VM] vm-client      192.168.1.211  — Windows 10           — Poste client de test
 └── [VM] vm-clone       —             — Debian 12            — Template de base (prêt à cloner)
 ```
 
@@ -79,22 +79,22 @@ VM Debian 12 préconfigurée (ssh, outils de base, agent Proxmox) servant de poi
 
 ### Adressage IP
 
-> Les VMs sont déployées sur un réseau plat `10.33.81.0/24` (environnement lab). Le découpage VLAN reste l'architecture cible pour un déploiement en production.
+> Les VMs sont déployées sur un réseau plat `192.168.1.0/24` (environnement lab). Le découpage VLAN reste l'architecture cible pour un déploiement en production.
 
 | VM / CT | ID Proxmox | IP fixe |
 |---|---|---|
-| `ct-vpn` (CT) | 100 | 10.33.81.208 |
-| `vm-client` | 101 | 10.33.81.211 |
-| `vm-dc` | 102 | 10.33.81.222 |
-| `vm-supervision` | 103 | 10.33.81.224 |
-| `vm-erp` | 104 | 10.33.81.221 |
-| `vm-nas` | 105 | 10.33.81.219 |
+| `ct-vpn` (CT) | 100 | 192.168.1.208 |
+| `vm-client` | 101 | 192.168.1.211 |
+| `vm-dc` | 102 | 192.168.1.222 |
+| `vm-supervision` | 103 | 192.168.1.224 |
+| `vm-erp` | 104 | 192.168.1.221 |
+| `vm-nas` | 105 | 192.168.1.219 |
 | `vm-clone` | 106 | — |
-| `vm-web` | 107 | 10.33.81.223 |
+| `vm-web` | 107 | 192.168.1.223 |
 
 ### Accès distant
 
-- **Commerciaux en télétravail** : VPN WireGuard déployé sur `ct-vpn` (10.33.81.208, port UDP 51820), tunnelé vers le réseau interne
+- **Commerciaux en télétravail** : VPN WireGuard déployé sur `ct-vpn` (192.168.1.208, port UDP 51820), tunnelé vers le réseau interne
 - **Prestataire CNC** : accès VPN restreint via `ct-vpn`, limité aux ressources atelier via règles firewall Proxmox
 
 ## Estimation des ressources

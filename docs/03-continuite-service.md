@@ -84,7 +84,7 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 1. Sur vm-nas, naviguer dans /backup/cao/
 2. Retrouver la version J-1 ou J-2
 3. Copier le fichier vers /srv/samba/cao/
-4. Vérifier l'accès depuis un poste client (\\10.33.81.219\CAO)
+4. Vérifier l'accès depuis un poste client (\\192.168.1.219\CAO)
 ```
 
 **Temps estimé : 5 à 10 minutes**
