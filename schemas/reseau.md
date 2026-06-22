@@ -74,7 +74,7 @@ iface enp3s0 inet manual
 # Bridge principal
 auto vmbr0
 iface vmbr0 inet static
-    address 192.168.1.x/24
+    address 192.168.1.3/24
     gateway 192.168.1.1
     bridge-ports enp3s0
     bridge-stp off

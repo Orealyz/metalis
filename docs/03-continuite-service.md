@@ -70,7 +70,7 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 ### Restauration d'une VM (cas général)
 
 ```
-1. Se connecter à Proxmox (https://<IP_PROXMOX>:8006)
+1. Se connecter à Proxmox (https://192.168.1.3:8006)
 2. Tenter un redémarrage simple de la VM
 3. Si échec : arrêter la VM → Snapshots → Rollback sur le dernier snapshot valide
 4. Redémarrer la VM et vérifier le service
