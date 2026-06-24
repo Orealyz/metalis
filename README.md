@@ -34,7 +34,7 @@ L'objectif est de virtualiser les services critiques (fichiers CAO, ERP Odoo, ac
 
 ```bash
 # 1. Cloner le dépôt sur le nœud Proxmox
-git clone <url-repo> /opt/mspr-metalis
+git clone https://github.com/Orealyz/metalis.git /opt/mspr-metalis
 
 # 2. Configurer les variables
 cp scripts/vars.env.example scripts/vars.env
