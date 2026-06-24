@@ -11,7 +11,7 @@ Fenêtre de tolérance client : **20h–4h** (hors plage de production 2×8).
 | Service | VM | RTO cible | RPO cible |
 |---|---|---|---|
 | Fichiers CAO | vm-nas | **30 min** | 4h |
-| Active Directory | vm-dc | 1h | 7 jours |
+| Active Directory | vm-dc | 1h | 4h |
 | ERP Odoo | vm-erp | 2h | 4h |
 | Site e-commerce | vm-web | 4h | 4h |
 | VPN | ct-vpn | 4h | N/A |
